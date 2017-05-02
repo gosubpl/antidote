@@ -1,5 +1,6 @@
 FROM erlang:19
 
+
 ENV HANDOFF_PORT "8099"
 ENV PB_PORT "8087"
 ENV PB_IP "0.0.0.0"
@@ -7,10 +8,11 @@ ENV PBSUB_PORT "8086"
 ENV LOGREADER_PORT "8085"
 ENV RING_STATE_DIR "data/ring"
 ENV PLATFORM_DATA_DIR "data"
-ENV NODE_NAME "antidote@127.0.0.1"
-ENV SHORT_NAME "false"
+ENV NODE_NAME "antidote"
+ENV COOKIE "antidote"
+ENV SHORT_NAME "true"
 ENV ANTIDOTE_REPO "https://github.com/SyncFree/antidote.git"
-ENV ANTIDOTE_BRANCH "master"
+ENV ANTIDOTE_BRANCH "origin/integrate-scripts"
 
 RUN set -xe \
   && apt-get update \
