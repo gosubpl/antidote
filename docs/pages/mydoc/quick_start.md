@@ -45,10 +45,10 @@ docker run -i -t -d --name antidote2 --network default_ntwk -e NODE_NAME=antidot
 To simplify the addressing of the Antidote nodes, we get the host names of both nodes:
 
 ```sh
-docker inspect --format '{{ "{{.Config.Hostname "}}}}' antidote1
+docker inspect --format '{{ "{{.Config.Hostname"}}}}' antidote1
 # output: 1ea3a5843daf
 
-docker inspect --format '{{ "{{.Config.Hostname "}}}}' antidote2
+docker inspect --format '{{ "{{.Config.Hostname"}}}}' antidote2
 # output: 7d8a69ce1faf
 ```
 
