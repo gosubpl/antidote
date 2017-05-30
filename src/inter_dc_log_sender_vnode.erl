@@ -114,6 +114,37 @@ handle_command({log_event, LogRecord}, _Sender, State) ->
     %% If the transaction was collected
     {ok, Ops} ->
       Txn = inter_dc_txn:from_ops(Ops, State1#state.partition, State#state.last_log_id),
+
+      %% ==================== Commander Instrumentation ====================
+      %%  Update upstream transactions data in commander, and have them recorded
+      %% ===================================================================
+      TestNode = list_to_atom(os:getenv("TESTNODE")),
+      LastLogRec = lists:last(Ops),
+      LogOp = LastLogRec#log_record.log_operation,
+      TxId = LogOp#log_operation.tx_id,
+      commit = LogOp#log_operation.op_type, %% sanity check
+%%      commit = CommitPld#log_record.op_type,
+%%      CommitPld = LastOp#operation.payload,
+      CommitPld = LogOp#log_operation.log_payload,
+      {DCID, CommitTime} = CommitPld#commit_log_payload.commit_time,
+%%      {{DCID, CommitTime}, SnapshotTime} = CommitPld#log_record.op_payload,
+      SnapshotTime = CommitPld#commit_log_payload.snapshot_time,
+%%      TxId = CommitPld#log_record.tx_id,
+      Partition = Txn#interdc_txn.partition,
+      Data = {TxId, DCID, CommitTime, SnapshotTime, Partition},
+      Phase = rpc:call(TestNode, commander, phase, []),
+      io:format("~n====== Phase: ~p ======~n", [Phase]),
+      case Phase of
+          record ->
+              %%% TODO: merge following two lines into one
+              ok = rpc:call(TestNode, commander, update_upstream_event_data, [Data]),
+              ok = rpc:call(TestNode, commander, update_transactions_data, [TxId, Txn]);
+          replay ->
+              skip;
+          _ -> noop
+      end,
+      %% ==================== End of Instrumentation Region ====================
+
       broadcast(State1, Txn);
     %% If the transaction is not yet complete
     none -> State1
