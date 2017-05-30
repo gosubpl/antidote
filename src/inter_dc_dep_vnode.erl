@@ -121,6 +121,7 @@ try_store(State, Txn=#interdc_txn{dcid = DCID, partition = Partition, timestamp 
   Dependencies = vectorclock:set_clock_of_dc(DCID, 0, Txn#interdc_txn.snapshot),
   CurrentClock = vectorclock:set_clock_of_dc(DCID, 0, get_partition_clock(State)),
 
+  TestNode = list_to_atom(os:getenv("TESTNODE")),
   %% Check if the current clock is greater than or equal to the dependency vector
   case vectorclock:ge(CurrentClock, Dependencies) of
 
@@ -140,7 +141,20 @@ try_store(State, Txn=#interdc_txn{dcid = DCID, partition = Partition, timestamp 
       ClockSiOps = updates_to_clocksi_payloads(Txn),
 
       ok = lists:foreach(fun(Op) -> materializer_vnode:update(Op#clocksi_payload.key, Op) end, ClockSiOps),
-      {update_clock(State, DCID, Timestamp), true}
+      %% ==================== Commander Instrumentation ====================
+      %% Send the downstream event data to the commander
+      %% ===================================================================
+      Phase = rpc:call(TestNode, commander, phase, []),
+      case Phase of
+          record ->
+              ok = rpc:call(TestNode, commander, get_downstream_event_data,
+                      [{dc_utilities:get_my_dc_id(), node(), Txn}]);
+          replay ->
+              skip
+      end,
+      %% ==================== End of Instrumentation Region ====================
+
+        {update_clock(State, DCID, Timestamp), true}
   end.
 
 handle_command({set_dependency_clock, Vector}, _Sender, State) ->
