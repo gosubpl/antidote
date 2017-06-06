@@ -1,3 +1,6 @@
+# Replication branch
+This branch implements a intra-dc replication protocol.
+
 Antidote
 ============
 [![Build Status](https://travis-ci.org/SyncFree/antidote.svg?branch=master)](https://travis-ci.org/SyncFree/antidote)
