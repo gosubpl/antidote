@@ -66,7 +66,7 @@
 %% Send the new operation to the log_sender.
 %% The transaction will be buffered until all the operations in a transaction are collected,
 %% and then the transaction will be broadcasted via interDC.
-%% WARNING: only LOCALLY COMMITED operations (not from remote DCs) should be sent to log_sender_vnode.
+%% WARNING: only LOCALLY COMMITTED operations (not from remote DCs) should be sent to log_sender_vnode.
 -spec send(partition_id(), #log_record{}) -> ok.
 send(Partition, LogRecord) -> dc_utilities:call_vnode(Partition, inter_dc_log_sender_vnode_master, {log_event, LogRecord}).
 
@@ -75,7 +75,7 @@ send(Partition, LogRecord) -> dc_utilities:call_vnode(Partition, inter_dc_log_se
 start_timer(Partition) -> dc_utilities:call_vnode_sync(Partition, inter_dc_log_sender_vnode_master, {start_timer}).
 
 %% After restarting from failure, load the operation id of the last operation sent by this DC
-%% Otherwise the stable time won't advance as the receving DC will be thinking it is getting old messages
+%% Otherwise the stable time won't advance as the receiving DC will be thinking it is getting old messages
 -spec update_last_log_id(partition_id(), #op_number{}) -> ok.
 update_last_log_id(Partition, OpId) -> dc_utilities:call_vnode_sync(Partition, inter_dc_log_sender_vnode_master, {update_last_log_id, OpId}).
 
